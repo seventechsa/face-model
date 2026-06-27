@@ -1,0 +1,48 @@
+# Primary config: UTKFace, 456x456, StarGAN-style age progression.
+run_name: utkface_456
+seed: 42
+
+data_root: ./data/UTKFace        # folder with UTKFace .jpg files (recursive ok)
+output_root: ./outputs           # outputs/<run_name>/{weights,samples,logs,eval}
+image_size: 456
+
+# 5 age groups: 0-19, 20-29, 30-39, 40-49, 50+   (edit to change progression bins)
+age_bins: [0, 20, 30, 40, 50, 200]
+
+num_workers: 4
+val_fraction: 0.05
+test_fraction: 0.05
+
+# model
+g_conv_dim: 64
+g_res_blocks: 6
+g_downsample: 2
+d_conv_dim: 64
+d_layers: 6
+
+# training  (batch_size 4 fits ~16GB at 456; lower to 2 if you hit OOM)
+epochs: 100
+batch_size: 4
+g_lr: 0.0001
+d_lr: 0.0001
+beta1: 0.5
+beta2: 0.999
+n_critic: 1
+adv_loss: hinge                  # hinge (AMP-friendly) | wgan-gp (forces AMP off)
+lambda_cls: 1.0
+lambda_rec: 10.0
+lambda_id: 1.0
+r1_gamma: 0.0                     # >0 enables R1 but disables AMP
+use_amp: true                    # mixed precision (CUDA only) — key for 456 on 16GB
+
+# identity / inference
+use_identity: true
+align_faces: false
+
+# logging / checkpoints / eval
+sample_every_epochs: 1
+save_every_epochs: 1
+eval_every_epochs: 5
+log_every_iters: 50
+max_eval_images: 500
+keep_last_n_epochs: -1           # -1 = keep every epoch's weights; set e.g. 10 to save disk

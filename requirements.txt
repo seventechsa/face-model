@@ -1,0 +1,22 @@
+# --- Core (PyTorch is preinstalled on Colab/Kaggle; install locally if missing) ---
+torch>=2.0
+torchvision>=0.15
+
+# --- Utilities ---
+numpy
+pillow
+pyyaml
+tqdm
+matplotlib
+scipy
+
+# --- Metrics: FID / SSIM / PSNR / LPIPS ---
+torchmetrics>=1.0
+torch-fidelity   # required by torchmetrics for FID
+lpips
+
+# --- Identity (FaceNet) for identity loss + CSIM metric ---
+# IMPORTANT: facenet-pytorch may try to pin an old torch and downgrade it.
+# Install it WITHOUT deps so it keeps your existing torch:
+#     pip install facenet-pytorch --no-deps
+facenet-pytorch
