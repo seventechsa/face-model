@@ -3,9 +3,10 @@ import torch
 import torch.nn.functional as F
 
 
-def d_hinge(real_src, fake_src):
-    """Discriminator hinge loss."""
-    return F.relu(1.0 - real_src).mean() + F.relu(1.0 + fake_src).mean()
+def d_hinge(real_src, fake_src, label_smoothing=0.0):
+    """Discriminator hinge loss with optional one-sided label smoothing."""
+    real_target = 1.0 - label_smoothing
+    return F.relu(real_target - real_src).mean() + F.relu(1.0 + fake_src).mean()
 
 
 def g_hinge(fake_src):

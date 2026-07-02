@@ -33,6 +33,7 @@ lambda_cls: 1.0
 lambda_rec: 10.0
 lambda_id: 1.0
 r1_gamma: 0.0                     # >0 enables R1 but disables AMP
+label_smoothing: 0.1            # one-sided label smoothing for D stability
 use_amp: true                    # mixed precision (CUDA only) — key for 456 on 16GB
 
 # identity / inference

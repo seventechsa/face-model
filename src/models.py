@@ -16,6 +16,17 @@ def _inorm(dim):
     return nn.InstanceNorm2d(dim, affine=True, track_running_stats=False)
 
 
+def weights_init(module):
+    if isinstance(module, (nn.Conv2d, nn.ConvTranspose2d)):
+        nn.init.normal_(module.weight, 0.0, 0.02)
+        if module.bias is not None:
+            nn.init.constant_(module.bias, 0.0)
+    elif isinstance(module, nn.Linear):
+        nn.init.normal_(module.weight, 0.0, 0.02)
+        if module.bias is not None:
+            nn.init.constant_(module.bias, 0.0)
+
+
 class ResidualBlock(nn.Module):
     def __init__(self, dim):
         super().__init__()
@@ -36,15 +47,15 @@ class Generator(nn.Module):
             _inorm(conv_dim), nn.ReLU(inplace=True),
         ]
         curr = conv_dim
-        for _ in range(downsample):  # encoder
+        for _ in range(downsample):
             layers += [
                 nn.Conv2d(curr, curr * 2, 4, 2, 1, bias=False),
                 _inorm(curr * 2), nn.ReLU(inplace=True),
             ]
             curr *= 2
-        for _ in range(res_blocks):  # bottleneck
+        for _ in range(res_blocks):
             layers.append(ResidualBlock(curr))
-        for _ in range(downsample):  # decoder
+        for _ in range(downsample):
             layers += [
                 nn.ConvTranspose2d(curr, curr // 2, 4, 2, 1, bias=False),
                 _inorm(curr // 2), nn.ReLU(inplace=True),
@@ -52,26 +63,28 @@ class Generator(nn.Module):
             curr //= 2
         layers += [nn.Conv2d(curr, 3, 7, 1, 3), nn.Tanh()]
         self.main = nn.Sequential(*layers)
+        self.apply(weights_init)
 
     def forward(self, x, c):
-        # c: (B, c_dim) -> (B, c_dim, H, W), concat on channels
         c = c.view(c.size(0), c.size(1), 1, 1).expand(-1, -1, x.size(2), x.size(3))
         return self.main(torch.cat([x, c], dim=1))
 
 
 class Discriminator(nn.Module):
-    def __init__(self, image_size, c_dim, conv_dim=64, n_layers=6):
+    def __init__(self, image_size, c_dim, conv_dim=64, n_layers=6, max_channels=512):
         super().__init__()
-        layers = [nn.Conv2d(3, conv_dim, 4, 2, 1), nn.LeakyReLU(0.01, inplace=True)]
+        layers = [nn.Conv2d(3, conv_dim, 4, 2, 1), nn.LeakyReLU(0.2, inplace=True)]
         curr = conv_dim
         for _ in range(1, n_layers):
-            layers += [nn.Conv2d(curr, curr * 2, 4, 2, 1), nn.LeakyReLU(0.01, inplace=True)]
-            curr *= 2
+            nxt = min(curr * 2, max_channels)
+            layers += [nn.Conv2d(curr, nxt, 4, 2, 1), nn.LeakyReLU(0.2, inplace=True)]
+            curr = nxt
         self.backbone = nn.Sequential(*layers)
-        self.conv_src = nn.Conv2d(curr, 1, 3, 1, 1, bias=False)  # patch logits
-        self.cls_head = nn.Sequential(  # age-group logits (size-agnostic)
+        self.conv_src = nn.Conv2d(curr, 1, 3, 1, 1, bias=False)
+        self.cls_head = nn.Sequential(
             nn.AdaptiveAvgPool2d(1), nn.Flatten(), nn.Linear(curr, c_dim),
         )
+        self.apply(weights_init)
 
     def forward(self, x):
         h = self.backbone(x)

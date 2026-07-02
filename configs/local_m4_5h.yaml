@@ -1,11 +1,11 @@
-# Fast sanity-check config (small images, few epochs) to verify the pipeline
-# on real data before committing to the long 456 run.
-run_name: utkface_debug
+# Measured for a MacBook Air M4 (8-core GPU, 16 GB unified memory).
+# Expected wall time on the full local UTKFace dataset: about 3h50m-4h40m.
+run_name: utkface_m4_5h
 seed: 42
 
 data_root: ./data/UTKFace
 output_root: ./outputs
-image_size: 128
+image_size: 192
 
 age_bins: [0, 20, 30, 40, 50, 200]
 
@@ -13,13 +13,14 @@ num_workers: 2
 val_fraction: 0.05
 test_fraction: 0.05
 
-g_conv_dim: 64
-g_res_blocks: 6
+# A smaller model gives substantially more useful updates inside the 5-hour budget.
+g_conv_dim: 32
+g_res_blocks: 4
 g_downsample: 2
-d_conv_dim: 64
+d_conv_dim: 32
 d_layers: 5
 
-epochs: 3
+epochs: 8
 batch_size: 8
 g_lr: 0.0001
 d_lr: 0.0001
@@ -32,14 +33,14 @@ lambda_rec: 10.0
 lambda_id: 1.0
 r1_gamma: 0.0
 label_smoothing: 0.1
-use_amp: true
+use_amp: false
 
 use_identity: true
 align_faces: false
 
 sample_every_epochs: 1
 save_every_epochs: 1
-eval_every_epochs: 1
-log_every_iters: 20
+eval_every_epochs: 4
+log_every_iters: 50
 max_eval_images: 128
-keep_last_n_epochs: -1
+keep_last_n_epochs: 2

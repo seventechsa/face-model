@@ -38,6 +38,7 @@ DEFAULTS = {
     "lambda_gp": 10.0,           # used only if adv_loss == "wgan-gp"
     "r1_gamma": 0.0,             # R1 reg on D (0 = off). NOTE: enabling gp/r1 forces AMP off.
     "r1_every": 16,
+    "label_smoothing": 0.1,      # one-sided label smoothing for D (0 = off)
     "use_amp": True,             # mixed precision (CUDA only)
 
     # --- identity / inference ---

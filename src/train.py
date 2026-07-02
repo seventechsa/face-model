@@ -168,7 +168,8 @@ def main(cfg):
                 x_fake = G(x_real, c_trg)
                 real_src, real_cls = D(x_real)
                 fake_src, _ = D(x_fake.detach())
-                d_adv = d_hinge(real_src, fake_src) if cfg.adv_loss == "hinge" \
+                smoothing = getattr(cfg, "label_smoothing", 0.1)
+                d_adv = d_hinge(real_src, fake_src, smoothing) if cfg.adv_loss == "hinge" \
                     else d_wgan(real_src, fake_src)
                 d_cls = classification_loss(real_cls, label_org)
                 d_loss = d_adv + cfg.lambda_cls * d_cls
